@@ -1,0 +1,17 @@
+{
+  "name": "Sky Rider",
+  "short_name": "Sky Rider",
+  "description": "A 3D racing game above the clouds. Solo play works offline; ride bikes, a flying car or a helicopter with friends online.",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#2f7fe0",
+  "theme_color": "#2f7fe0",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

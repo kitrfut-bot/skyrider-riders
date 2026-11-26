@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#2f7fe0" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="description" content="Sky Rider: a 3D racing game above the clouds. Ride bikes, a flying car or a helicopter across floating islands, solo offline or online with friends." />
+    <title>Sky Rider - Race Above the Clouds</title>
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+  </head>
+  <body>
+    <canvas id="game" aria-label="Sky Rider game view"></canvas>
+
+    <div id="hud" hidden>
+      <div class="hud-top">
+        <div class="stat-group stat-group-left">
+          <div class="stat" id="hud-speed">
+            <span class="val">0</span><span class="unit">km/h</span>
+          </div>
+          <div class="stat stat-small" id="hud-alt" hidden>
+            <span class="label">Alt</span><span class="val">0</span><span class="unit">m</span>
+          </div>
+          <div class="stat stat-small meter" id="hud-energy" hidden>
+            <span class="label">Thrust</span>
+            <span class="meter-bar" aria-hidden="true"><span id="hud-energy-fill"></span></span>
+          </div>
+        </div>
+        <div class="stat stat-center">
+          <div id="hud-time"><span class="val">0:00.0</span></div>
+          <div class="progress" aria-hidden="true"><div id="hud-progress-fill"></div></div>
+        </div>
+        <div class="stat-group">
+          <div class="stat" id="hud-dist">
+            <span class="val">0</span><span class="unit">/ 0 m</span>
+          </div>
+          <div class="stat stat-small" id="hud-cp">
+            <span class="label">CP</span><span class="val">0/0</span>
+          </div>
+          <div class="stat stat-small" id="hud-rank" hidden>
+            <span class="label">Pos</span><span class="val">1/1</span>
+          </div>
+        </div>
+      </div>
+      <div id="toast" role="status" aria-live="polite"></div>
+      <div id="countdown" aria-live="assertive"></div>
+    </div>
+
+    <div id="touch" hidden>
+      <div id="stick-base" aria-hidden="true"><div id="stick-knob"></div></div>
+      <p class="stick-hint" aria-hidden="true">Steer</p>
+      <button id="btn-pause" class="pause-btn" aria-label="Pause">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></svg>
+      </button>
+      <div class="tbtn tbtn-jump" data-btn="jump" role="button" aria-label="Jump" id="tbtn-jump">
+        <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M12 4l7 8h-4v7H9v-7H5z" fill="currentColor"/></svg>
+        <span id="lbl-jump">Jump</span>
+      </div>
+      <div class="tbtn tbtn-down" data-btn="down" role="button" aria-label="Down" id="tbtn-down" hidden>
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 20l-7-8h4V5h6v7h4z" fill="currentColor"/></svg>
+        <span>Down</span>
+      </div>
+      <div class="tbtn tbtn-brake" id="tbtn-brake" data-btn="brake" role="button" aria-label="Brake">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>
+        <span>Brake</span>
+      </div>
+      <div class="tbtn tbtn-accel" data-btn="accel" role="button" aria-label="Pedal" id="tbtn-accel">
+        <svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M8 5l11 7-11 7z" fill="currentColor"/></svg>
+        <span id="lbl-accel">Pedal</span>
+      </div>
+    </div>
+
+    <div id="fade" aria-hidden="true"></div>
+
+    <section class="screen" id="screen-menu" aria-labelledby="title">
+      <div class="panel panel-menu">
+        <div class="menu-main">
+          <div class="brand">
+            <p class="eyebrow">Above the clouds</p>
+            <h1 id="title">Sky Rider</h1>
+          </div>
+
+          <button id="btn-garage" class="ride-card" aria-label="Open the garage to change your vehicle">
+            <span class="ride-icon" id="ride-icon"></span>
+            <span class="ride-text">
+              <span class="ride-name" id="ride-name">Sky Racer</span>
+              <span class="ride-type" id="ride-type">Road bike</span>
+            </span>
+            <span class="ride-open">Garage</span>
+          </button>
+          <p class="ride-hint" id="ride-hint"></p>
+
+          <button id="btn-play" class="cta">Ride solo</button>
+          <p class="best" id="menu-best"></p>
+          <p class="best" id="solo-note" hidden>Leave the room to ride solo.</p>
+
+          <details class="how-wrap">
+            <summary>Controls</summary>
+            <ul class="how" id="how-list"></ul>
+          </details>
+        </div>
+
+        <div class="menu-lobby" aria-label="Online lobby">
+          <div class="lobby-head">
+            <p class="eyebrow">Online lobby</p>
+            <span class="net-pill" id="net-pill">Online</span>
+          </div>
+
+          <div class="lobby-view" id="lobby-join">
+            <label class="field"><span>Your name</span>
+              <input id="mp-name" maxlength="12" autocomplete="off" autocapitalize="words" spellcheck="false" />
+            </label>
+            <button id="btn-create" class="cta">Create room</button>
+            <p class="or">or join with a code</p>
+            <div class="join-row">
+              <input id="mp-code" class="code-input" maxlength="5" placeholder="CODE" aria-label="Room code" autocomplete="off" autocapitalize="characters" spellcheck="false" />
+              <button id="btn-join" class="cta cta-alt">Join</button>
+            </div>
+            <p class="mp-status" id="mp-status" role="status" aria-live="polite"></p>
+            <p class="lobby-note">Up to 10 riders. Everyone can pick any vehicle from the garage.</p>
+          </div>
+
+          <div class="lobby-view" id="lobby-room" hidden>
+            <div class="code-row">
+              <span class="room-code" id="room-code" aria-label="Room code">-----</span>
+              <button id="btn-copy" class="ghost small">Copy</button>
+              <button id="btn-share" class="ghost small" hidden>Share</button>
+            </div>
+            <p class="count" id="lobby-count">1 / 10 riders</p>
+            <ul class="roster roster-lobby" id="lobby-list"></ul>
+
+            <div class="chat">
+              <ol class="chat-log" id="chat-log" aria-label="Room chat" aria-live="polite"></ol>
+              <form class="chat-row" id="chat-form" autocomplete="off">
+                <input id="chat-input" maxlength="80" placeholder="Say something to the room" aria-label="Chat message" spellcheck="false" />
+                <button class="ghost small" type="submit">Send</button>
+              </form>
+            </div>
+
+            <p class="mp-status" id="lobby-status" role="status" aria-live="polite"></p>
+            <div class="actions row">
+              <button id="btn-ready" class="cta cta-alt" aria-pressed="false" hidden>I'm ready</button>
+              <button id="btn-start-mp" class="cta">Start race</button>
+              <button id="btn-leave-lobby" class="ghost" data-back>Leave</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen screen-garage" id="screen-garage" hidden aria-labelledby="garage-title">
+      <div class="panel panel-garage">
+        <div class="garage-head">
+          <p class="eyebrow">Garage</p>
+          <h2 id="garage-title">Sky Racer</h2>
+          <p class="garage-type" id="garage-type">Road bike</p>
+        </div>
+        <div class="garage-list" id="garage-list" role="radiogroup" aria-label="Vehicle"></div>
+        <p class="garage-desc" id="garage-desc"></p>
+        <dl class="stats" id="garage-stats"></dl>
+        <div class="paint-row">
+          <span class="paint-label" id="paint-label">Paint</span>
+          <div class="swatches" id="garage-paints" role="radiogroup" aria-labelledby="paint-label"></div>
+        </div>
+        <div class="paint-row rider-row">
+          <span class="paint-label" id="rider-label">Rider</span>
+          <div class="riders" id="garage-riders" role="radiogroup" aria-labelledby="rider-label"></div>
+        </div>
+        <p class="rider-desc" id="garage-rider-desc"></p>
+        <p class="best" id="garage-note"></p>
+        <div class="actions row">
+          <button id="btn-garage-done" class="cta" data-back>Done</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-pause" hidden aria-labelledby="pause-title">
+      <div class="panel">
+        <h2 id="pause-title">Paused</h2>
+        <div class="actions">
+          <button id="btn-resume" class="cta" data-back>Resume</button>
+          <button id="btn-respawn" class="ghost">Back to checkpoint</button>
+          <button id="btn-restart" class="ghost">Restart course</button>
+          <button id="btn-mute" class="ghost" aria-pressed="true">Sound: On</button>
+          <button id="btn-leave-race" class="ghost" hidden>Leave race</button>
+        </div>
+        <p class="best" id="pause-note" hidden>The race keeps running while this menu is open.</p>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-finish" hidden aria-labelledby="finish-title">
+      <div class="panel">
+        <p class="eyebrow">Course complete</p>
+        <h2 id="finish-title">You made it!</h2>
+        <p class="big-time" id="finish-time">0:00.0</p>
+        <p class="badge" id="finish-badge" hidden>New best time</p>
+        <p class="best" id="finish-best"></p>
+        <button id="btn-again" class="cta">Ride again</button>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-results" hidden aria-labelledby="results-title">
+      <div class="panel panel-lobby">
+        <p class="eyebrow">Race over</p>
+        <h2 id="results-title">Results</h2>
+        <ol class="roster results" id="results-list"></ol>
+        <p class="mp-status" id="results-status" role="status" aria-live="polite"></p>
+        <div class="actions row">
+          <button id="btn-lobby-again" class="cta">Back to lobby</button>
+          <button id="btn-leave-results" class="ghost" data-back>Leave room</button>
+        </div>
+      </div>
+    </section>
+
+    <div id="rotate" role="alert">
+      <svg viewBox="0 0 48 48" width="56" height="56" aria-hidden="true"><rect x="14" y="6" width="20" height="36" rx="4" fill="none" stroke="currentColor" stroke-width="3"/><path d="M40 30a12 12 0 0 1-12 12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M26 39l2 3 3-2" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+      <p>Rotate your phone to landscape to ride</p>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
